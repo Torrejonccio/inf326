@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # servicio del chatbot
   chatbot_service:
@@ -13,7 +11,7 @@ services:
       redis:
         condition: service_healthy
     restart: on-failure
-    command: python chat-bot_service.py
+    command: python chat_bot_service.py
 
     # cargamos las variables de entorno desde el archivo
     env_file:

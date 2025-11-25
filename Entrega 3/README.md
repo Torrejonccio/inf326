@@ -1,37 +1,98 @@
-    - Renato Ramírez   | ROL: 202173639-5
-    - Matias Torrejon  | ROL: 202173543-7
+Por supuesto. Aquí tienes el `README.md` final y consolidado.
+
+Este documento refleja todos los cambios que hicimos: el cambio de nombre del archivo principal (`chat_bot_service.py`), la inclusión del `Makefile`, la explicación detallada de los 5 tests que acabas de validar y los integrantes del equipo.
+
+-----
 
 # Chatbot Académico - Microservicio
 
-Este proyecto implementa un microservicio de chatbot académico que responde preguntas frecuentes usando Redis y RabbitMQ. Todo el sistema se ejecuta a traves de Docker Compose.
+**Integrantes:**
 
-En esta versión del microservicio, puesto que como aún no se han hecho las conexiones con los demas microservicios, lo que se hizo fue crear un script que se encarga de agregar preguntas junto con sus respuestas, de manera que se pueden agregar o modificar preguntas y respuestas con este script, ademas se creo otro programa que se encarga de probar el Chat-bot, dando una pequeña interfaz para poder hacer las preguntas (solo las preguntas que se agregaron con el script anterior). Para la base de conocimineto se utilizó *Redis* y para la comunicación por colas se usó *RabbitMQ*.
+  - Renato Ramírez   | ROL: 202173639-5
+  - Matias Torrejon  | ROL: 202173543-7
 
-## Instrucciones de uso
+-----
 
-### 1. Requisitos
-- Docker y Docker Compose instalados
-- Python 3.10+ (para los scripts)
+Este proyecto implementa un microservicio de **Chatbot Académico** diseñado para responder preguntas frecuentes sobre la asignatura (ej. "Arquitectura de Software") de manera automatizada.
 
-### 2. Levantar el sistema
-sh
-docker-compose up --build
+El sistema utiliza:
 
-Esto inicia Redis, RabbitMQ y el servicio del chatbot.
+  - **Redis:** Como base de conocimiento en memoria (clave-valor) para búsquedas rápidas.
+  - **RabbitMQ:** Para la gestión asíncrona de mensajes mediante colas (`questions_queue` y `answers_queue`).
+  - **Python 3.11:** Lenguaje base del servicio.
 
-### 3. Cargar preguntas y respuestas
-Editar add_questions.py para añadir preguntas con sus respectivas respuestas. Ejecutando el siguiente comando:
-sh
+La arquitectura está totalmente contenerizada y orquestada a través de **Docker Compose**.
+
+## Estructura del Proyecto
+
+Los archivos principales del sistema son:
+
+  - **`chat_bot_service.py`**: Lógica principal. Contiene la clase `ChatbotConsumer` que orquesta la conexión a RabbitMQ y las consultas a Redis.
+  - **`test_chatbot.py`**: Suite de pruebas automatizada con **pytest**. Utiliza `unittest.mock` para simular Redis y RabbitMQ, permitiendo pruebas rápidas sin infraestructura real.
+  - **`add_questions.py`**: Script utilitario para cargar preguntas y respuestas iniciales en Redis.
+  - **`chat_client_mejorado.py`**: Cliente interactivo de terminal para simular el envío de preguntas y recepción de respuestas.
+  - **`Makefile`**: Automatización de comandos para compilación, ejecución y pruebas.
+  - **`docker-compose.yml`**: Configuración de infraestructura (Chatbot, Redis, RabbitMQ).
+
+## Instrucciones de Uso
+
+### 1\. Requisitos Previos
+
+  - Docker Desktop (corriendo).
+  - Make (opcional, recomendado para facilitar comandos).
+
+### 2\. Despliegue del Sistema
+
+Para construir la imagen y levantar todos los servicios (Redis, RabbitMQ y Chatbot) en segundo plano:
+
+```bash
+make all
+```
+
+*(Alternativa manual: `docker-compose up --build -d`)*
+
+### 3\. Ejecución de Pruebas (Testing)
+
+El proyecto cuenta con una suite de **5 pruebas** que validan la robustez del servicio. Estas pruebas se ejecutan dentro del contenedor para asegurar la consistencia del entorno y utilizan **Mocks** para aislar la lógica.
+
+Para correr las pruebas:
+
+```bash
+make test
+```
+
+**Cobertura de Pruebas:**
+
+1.  **`test_get_answer_found`**: Verifica que si la pregunta existe en Redis (normalizando mayúsculas/minúsculas), se retorna la respuesta correcta.
+2.  **`test_get_answer_not_found`**: Verifica que si la pregunta no existe, se retorna el mensaje por defecto.
+3.  **`test_callback_success_flow`**: Simula el ciclo completo de RabbitMQ: Recibir mensaje -\> Consultar Redis -\> Publicar respuesta -\> Enviar ACK.
+4.  **`test_callback_malformed_json`**: Verifica que si llega un JSON corrupto (bytes inválidos), el servicio envía un NACK (sin reencolar) a la DLQ.
+5.  **`test_callback_missing_question_field`**: Verifica que si el JSON es válido pero le faltan datos obligatorios (clave `question`), se maneja el error correctamente.
+
+### 4\. Pruebas Funcionales Manuales
+
+Si desea interactuar manualmente con el bot funcionando con los servicios reales:
+
+**Paso A: Cargar la base de conocimiento**
+Edite `add_questions.py` si desea agregar nuevas preguntas y ejecute:
+
+```bash
 python add_questions.py
+```
 
+**Paso B: Interactuar con el Chatbot**
+Inicie el cliente de terminal para enviar preguntas a la cola y esperar respuestas:
 
-### 4. Probar el chatbot
-Para ejecutar el cliente interactivo:
-sh
+```bash
 python chat_client_mejorado.py
+```
 
-## Archivos principales
-- chat-bot_service.py: Servicio principal del chatbot.
-- add_questions.py: Script para cargar preguntas/respuestas en Redis.
-- chat_client_mejorado.py: Cliente interactivo para probar el chatbot.
-- docker-compose.yml y Dockerfile: Configuración para Docker.
+### 5\. Comandos del Makefile
+
+| Comando | Descripción |
+| :--- | :--- |
+| `make all` | Construye la imagen y levanta el entorno completo. |
+| `make test` | Ejecuta `pytest` con logs activados dentro del contenedor. |
+| `make logs` | Muestra los logs del contenedor del chatbot en tiempo real. |
+| `make down` | Detiene los servicios. |
+| `make clean` | Detiene y elimina contenedores y volúmenes (limpieza total). |
