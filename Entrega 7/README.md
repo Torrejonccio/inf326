@@ -1,9 +1,3 @@
-Por supuesto. Aquí tienes el `README.md` final y consolidado.
-
-Este documento refleja todos los cambios que hicimos: el cambio de nombre del archivo principal (`chat_bot_service.py`), la inclusión del `Makefile`, la explicación detallada de los 5 tests que acabas de validar y los integrantes del equipo.
-
------
-
 # Chatbot Académico - Microservicio
 
 **Integrantes:**
