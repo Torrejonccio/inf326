@@ -1,0 +1,93 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-grupo9-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-grupo9
+  template:
+    metadata:
+      labels:
+        app: gateway-grupo9
+    spec:
+      containers:
+      - name: gateway
+        image: torrejonccio/gateway-academico:v3.3
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-grupo9-service
+spec:
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: gateway-grupo9
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-grupo9-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-grupo9
+  template:
+    metadata:
+      labels:
+        app: frontend-grupo9
+    spec:
+      containers:
+      - name: frontend
+        image: torrejonccio/frontend-ui-academico:v3.5
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-grupo9-service
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: frontend-grupo9
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sistema-grupo9-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: "web-grupo9.inf326.nursoft.dev"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-grupo9-service
+            port:
+              number: 80
+  
+  - host: "gateway-grupo9.inf326.nursoft.dev"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gateway-grupo9-service
+            port:
+              number: 80
